@@ -1,0 +1,409 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Library Management API - CSE341 W04",
+    "description": "API for managing books and members with GitHub OAuth authentication, built by Anderson Okai for CSE341 Week 04.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "https://cse341-lib-wk3-4.onrender.com", "description": "Render Deployment" },
+    { "url": "http://localhost:3000", "description": "Local Development" }
+  ],
+  "tags": [
+    { "name": "Books", "description": "Operations related to books" },
+    { "name": "Members", "description": "Operations related to library members" },
+    { "name": "Authentication", "description": "User authentication endpoints" }
+  ],
+  "paths": {
+    "/auth/github": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Initiate GitHub OAuth login",
+        "description": "Redirects to GitHub for user authentication.",
+        "responses": {
+          "302": { "description": "Redirects to GitHub login page" }
+        }
+      }
+    },
+    "/auth/callback": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "GitHub OAuth callback",
+        "description": "Handles GitHub OAuth callback and returns a JWT token.",
+        "responses": {
+          "200": {
+            "description": "Authentication successful, returns JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string", "example": "jwt_token_here" }
+                  }
+                }
+              }
+            }
+          },
+          "302": { "description": "Redirects to root if authentication fails" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Log out user",
+        "description": "Logs out the user and destroys the session.",
+        "responses": {
+          "200": {
+            "description": "Logged out successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Logged out successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "description": "Logout failed", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      }
+    },
+    "/auth/status": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Check authentication status",
+        "description": "Returns the current user's authentication status.",
+        "responses": {
+          "200": {
+            "description": "User authentication status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": { "$ref": "#/components/schemas/User" },
+                    "isAuthenticated": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/books": {
+      "get": {
+        "tags": ["Books"],
+        "summary": "Get all books",
+        "description": "Retrieve a list of all books in the library.",
+        "responses": {
+          "200": {
+            "description": "List of books",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Book" }
+                }
+              }
+            }
+          },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      },
+      "post": {
+        "tags": ["Books"],
+        "summary": "Create a book",
+        "description": "Add a new book to the library. Requires authentication.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BookInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Book created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Book" }
+              }
+            }
+          },
+          "400": { "description": "Invalid input", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+          "401": { "description": "Authentication required", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+          "403": { "description": "Invalid token", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      }
+    },
+    "/books/{id}": {
+      "get": {
+        "tags": ["Books"],
+        "summary": "Get book by ID",
+        "description": "Retrieve details of a specific book by its ID.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The ID of the book" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Book details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Book" }
+              }
+            }
+          },
+          "404": { "description": "Book not found", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      },
+      "put": {
+        "tags": ["Books"],
+        "summary": "Update a book",
+        "description": "Update details of a specific book by its ID. Requires authentication.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The ID of the book" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BookInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Book updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Book" }
+              }
+            }
+          },
+          "400": { "description": "Invalid input", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+          "404": { "description": "Book not found", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+          "401": { "description": "Authentication required", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+          "403": { "description": "Invalid token", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Books"],
+        "summary": "Delete a book",
+        "description": "Remove a specific book from the library by its ID.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The ID of the book" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Book deleted",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "message": { "type": "string" } } }
+              }
+            }
+          },
+          "404": { "description": "Book not found", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      }
+    },
+    "/members": {
+      "get": {
+        "tags": ["Members"],
+        "summary": "Get all members",
+        "description": "Retrieve a list of all library members.",
+        "responses": {
+          "200": {
+            "description": "List of members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Member" }
+                }
+              }
+            }
+          },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      },
+      "post": {
+        "tags": ["Members"],
+        "summary": "Create a member",
+        "description": "Add a new member to the library.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MemberInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Member created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Member" }
+              }
+            }
+          },
+          "400": { "description": "Invalid input", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      }
+    },
+    "/members/{id}": {
+      "get": {
+        "tags": ["Members"],
+        "summary": "Get member by ID",
+        "description": "Retrieve details of a specific member by their ID.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The ID of the member" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Member" }
+              }
+            }
+          },
+          "404": { "description": "Member not found", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      },
+      "put": {
+        "tags": ["Members"],
+        "summary": "Update a member",
+        "description": "Update details of a specific member by their ID.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The ID of the member" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MemberInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Member updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Member" }
+              }
+            }
+          },
+          "400": { "description": "Invalid input", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
+          "404": { "description": "Member not found", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Members"],
+        "summary": "Delete a member",
+        "description": "Remove a specific member from the library by their ID.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The ID of the member" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member deleted",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "message": { "type": "string" } } }
+              }
+            }
+          },
+          "404": { "description": "Member not found", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "description": "Unique identifier for the user" },
+          "githubId": { "type": "string", "example": "123456" },
+          "username": { "type": "string", "example": "johndoe" },
+          "email": { "type": "string", "example": "johndoe@example.com" },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2025-05-31T00:00:00Z" }
+        }
+      },
+      "Book": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "description": "Unique identifier for the book" },
+          "title": { "type": "string", "example": "To Kill a Mockingbird" },
+          "author": { "type": "string", "example": "Harper Lee" },
+          "isbn": { "type": "string", "example": "978-0446310789" },
+          "genre": { "type": "string", "example": "Fiction" },
+          "publishedYear": { "type": "number", "example": 1960 },
+          "price": { "type": "number", "example": 9.99 },
+          "stock": { "type": "number", "example": 10 },
+          "description": { "type": "string", "example": "A classic novel about racial injustice and the loss of innocence in a small Southern town." }
+        },
+        "required": ["title", "author", "isbn", "genre", "publishedYear", "price", "stock", "description"]
+      },
+      "BookInput": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "To Kill a Mockingbird" },
+          "author": { "type": "string", "example": "Harper Lee" },
+          "isbn": { "type": "string", "example": "978-0446310789" },
+          "genre": { "type": "string", "example": "Fiction" },
+          "publishedYear": { "type": "number", "example": 1960 },
+          "price": { "type": "number", "example": 9.99 },
+          "stock": { "type": "number", "example": 10 },
+          "description": { "type": "string", "example": "A classic novel about racial injustice and the loss of innocence in a small Southern town." }
+        },
+        "required": ["title", "author", "isbn", "genre", "publishedYear", "price", "stock", "description"]
+      },
+      "Member": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "description": "Unique identifier for the member" },
+          "firstName": { "type": "string", "example": "Jane" },
+          "lastName": { "type": "string", "example": "Doe" },
+          "email": { "type": "string", "example": "jane.doe@example.com" },
+          "membershipId": { "type": "string", "example": "MEM12345" },
+          "joinDate": { "type": "string", "format": "date-time", "example": "2023-01-15T00:00:00Z" },
+          "booksBorrowed": { "type": "array", "items": { "type": "string" }, "example": ["978-0446310789"] },
+          "status": { "type": "string", "enum": ["active", "inactive"], "example": "active" }
+        },
+        "required": ["firstName", "lastName", "email", "membershipId", "joinDate", "status"]
+      },
+      "MemberInput": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string", "example": "Jane" },
+          "lastName": { "type": "string", "example": "Doe" },
+          "email": { "type": "string", "example": "jane.doe@example.com" },
+          "membershipId": { "type": "string", "example": "MEM12345" },
+          "joinDate": { "type": "string", "format": "date-time", "example": "2023-01-15T00:00:00Z" },
+          "booksBorrowed": { "type": "array", "items": { "type": "string" }, "example": ["978-0446310789"] },
+          "status": { "type": "string", "enum": ["active", "inactive"], "example": "active" }
+        },
+        "required": ["firstName", "lastName", "email", "membershipId", "joinDate", "status"]
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
