@@ -7,7 +7,8 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger.json');
 const session = require('express-session');
 const jwt = require('jsonwebtoken');
-require('dotenv').config({ path: 'C:/cse341-lib-wk3-4/.env' });
+require('dotenv').config();
+
 
 // Debug environment variables
 console.log('Environment variables loaded:');
