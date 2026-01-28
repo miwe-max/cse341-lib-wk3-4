@@ -41,7 +41,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Root route
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Welcome to Anderson Okai\'s Library Management API' });
+  res.status(200).json({ message: 'Welcome to Maxwell Iwe\'s Library Management API' });
 });
 
 // Authentication routes
@@ -93,15 +93,12 @@ if (!mongoUri) {
 }
 
 mongoose.set('strictQuery', true); // Suppress deprecation warning
-mongoose.connect(mongoUri, { 
-  useNewUrlParser: true, 
-  useUnifiedTopology: true 
-})
-  .then(() => console.log('Connected to MongoDB successfully'))
-  .catch(err => {
-    console.error('MongoDB connection error:', err.message);
-    process.exit(1);
-  });
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+
+  
 
 // Start server
 app.listen(port, () => {
