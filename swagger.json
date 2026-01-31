@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Library Management API - CSE341 W04",
-    "description": "API for managing books and members with GitHub OAuth authentication, built by Anderson Okai for CSE341 Week 04.",
+    "description": "API for managing books and members with GitHub OAuth authentication, built by Maxwell Iwe for CSE341 Week 04.",
     "version": "1.0.0"
   },
   "servers": [
